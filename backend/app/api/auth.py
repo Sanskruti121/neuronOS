@@ -3,7 +3,6 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-import httpx
 
 from app.config import settings
 from app.database import get_db
@@ -34,6 +33,7 @@ def _build_flow() -> Flow:
         },
         scopes=SCOPES,
         redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        autogenerate_code_verifier=False,
     )
 
 
@@ -47,7 +47,7 @@ def google_login():
 
 
 @router.get("/google/callback")
-def google_callback(code: str, db: Session = Depends(get_db)):
+def google_callback(code: str, state: str = None, db: Session = Depends(get_db)):
     flow = _build_flow()
     flow.fetch_token(code=code)
     creds = flow.credentials
